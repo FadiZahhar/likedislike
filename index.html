@@ -1,0 +1,68 @@
+<button class="like-button" data-article-id="123">Like</button>
+<button class="dislike-button" data-article-id="123">Dislike</button>
+
+<!-- javascript function -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+  const likeButtons = document.querySelectorAll('.like-button');
+  const dislikeButtons = document.querySelectorAll('.dislike-button');
+
+  likeButtons.forEach(button => button.addEventListener('click', handleLikeDislikeClick));
+  dislikeButtons.forEach(button => button.addEventListener('click', handleLikeDislikeClick));
+});
+
+function getOrCreateUID() {
+  let uid = localStorage.getItem('userUID');
+  if (!uid) {
+    // Generate a UID, e.g., using Date.now() and a random number for simplicity
+    uid = 'uid_' + Date.now().toString(36) + Math.random().toString(36).substr(2);
+    localStorage.setItem('userUID', uid);
+  }
+  return uid;
+}
+
+// Call this function when the application starts
+const userUID = getOrCreateUID();
+
+
+function handleLikeDislikeClick(event) {
+  const articleId = this.dataset.articleId;
+  const userChoice = this.classList.contains('like-button') ? 'like' : 'dislike';
+
+  if (!hasUserAlreadyVoted(articleId)) {
+    setUserChoice(articleId, userChoice);
+    sendVoteToServer(articleId, userChoice);
+  } else {
+    alert('You have already voted on this article.');
+  }
+}
+
+function setUserChoice(articleId, userChoice) {
+  const key = 'article_' + articleId;
+  localStorage.setItem(key, userChoice);
+}
+
+function hasUserAlreadyVoted(articleId) {
+  const key = 'article_' + articleId;
+  return localStorage.getItem(key) !== null;
+}
+
+function sendVoteToServer(articleId, userChoice) {
+  // Example AJAX request with Fetch API
+  fetch('/api/likesdislikes/vote', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ UserId: userUID, ArticleId: articleId, UserChoice: userChoice }),
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Success:', data);
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
+}
+
+</script>
